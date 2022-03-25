@@ -16,7 +16,7 @@
 
 #=====================================================
 # m2disk
-# Lilith Disk Utility
+# Lilith Machine Disk Utility
 #
 # Guido Hoss, 25.03.2022
 #
@@ -108,7 +108,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_m2disk_OBJECTS = m2d_main.$(OBJEXT)
+am_m2disk_OBJECTS = m2disk.$(OBJEXT) m2d_usage.$(OBJEXT)
 m2disk_OBJECTS = $(am_m2disk_OBJECTS)
 m2disk_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -126,7 +126,7 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/m2d_main.Po
+am__depfiles_remade = ./$(DEPDIR)/m2d_usage.Po ./$(DEPDIR)/m2disk.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -256,7 +256,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall -DVERSION_BUILD_DATE=\""$(shell date +'%F')"\"
 m2disk_SOURCES = \
-	m2d_main.c 
+	m2disk.c \
+	m2disk.h \
+	m2d_usage.c m2d_usage.h	
 
 all: all-am
 
@@ -344,7 +346,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_main.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_usage.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2disk.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -494,7 +497,8 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/m2d_main.Po
+		-rm -f ./$(DEPDIR)/m2d_usage.Po
+	-rm -f ./$(DEPDIR)/m2disk.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -540,7 +544,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/m2d_main.Po
+		-rm -f ./$(DEPDIR)/m2d_usage.Po
+	-rm -f ./$(DEPDIR)/m2disk.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
