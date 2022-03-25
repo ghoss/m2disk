@@ -1,8 +1,8 @@
 #=====================================================
-# mdecode
-# Lilith M-Code Disassembler
+# m2disk
+# Lilith Disk Utility
 #
-# Guido Hoss, 14.03.2022
+# Guido Hoss, 25.03.2022
 #
 # Published by Guido Hoss under GNU Public License V3.
 #=====================================================
@@ -11,7 +11,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.71])
-AC_INIT([m2decode], [0.3], [])
+AC_INIT([m2disk], [0.1], [])
 AM_INIT_AUTOMAKE([-Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
