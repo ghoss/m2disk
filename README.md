@@ -15,7 +15,24 @@ Work in progress. Not in a usable state yet!
 
 ## Usage
 ```
-(To be updated)
+USAGE: m2disk [-Vvlxhfic] [-d dest_dir] img_file [file_arg]
+
+-l	List directory of img_file
+	If file_arg is omitted: list all entries
+	otherwise, list files matching regex in file_arg
+
+-c	Create and format new (empty) image file as img_file
+-i	Import files matching file_arg into img_file
+-x	Extract files matching file_arg from img_file
+-d	Extract into destination 'dest_dir' (must already exist)
+
+-f	Force mode (overwrites existing files and images)
+-v	Verbose output
+-h	Show this help information
+-V	Show version information
+
+img_file is the filename of a disk image of an
+original Lilith Modula-2 machine.
 ```
 
 ## Examples
