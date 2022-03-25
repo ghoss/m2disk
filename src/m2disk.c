@@ -9,6 +9,8 @@
 
 #include "m2disk.h"
 #include "m2d_usage.h"
+#include "m2d_medos.h"
+
 
 // Global variables
 bool verbose = false;
@@ -39,42 +41,46 @@ int main(int argc, char **argv)
 	{
 		switch (c)
 		{
-		case 'l' :
-			mode = M_LISTDIR;
-			break;
+			case 'c' :
+				mode = M_FORMAT;
+				break;
 
-		case 'x' :
-			mode = M_EXTRACT;
-			break;
+			case 'l' :
+				mode = M_LISTDIR;
+				break;
 
-		case 'd' :
-			outdir = optarg;
-			break;
+			case 'x' :
+				mode = M_EXTRACT;
+				break;
 
-		case 'v' :
-			verbose = true;
-			break;
+			case 'd' :
+				outdir = optarg;
+				break;
 
-		case 'f' :
-			force = true;
-			break;
+			case 'v' :
+				verbose = true;
+				break;
 
-		case 'h' :
-			m2d_usage();
-			exit(0);
+			case 'f' :
+				force = true;
+				break;
 
-		case 'V' :
-			m2d_version();
-			exit(0);
+			case 'h' :
+				m2d_usage();
+				exit(0);
 
-		case '?' :
-			error(1, 0,
-				"Unrecognized option (run \"" PACKAGE " -h\" for help)."
-			);
-			break;
+			case 'V' :
+				m2d_version();
+				exit(0);
 
-		default :
-			break;
+			case '?' :
+				error(1, 0,
+					"Unrecognized option (run \"" PACKAGE " -h\" for help)."
+				);
+				break;
+
+			default :
+				break;
 		}
 	}
 
@@ -105,7 +111,8 @@ int main(int argc, char **argv)
 	}
 	if (verbose)
 	{
-		VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
+		if (mode != M_FORMAT)
+			VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
 		if (force)
 			VERBOSE("> Force mode enabled; existing files will be overwritten\n")
 	}
@@ -136,6 +143,14 @@ int main(int argc, char **argv)
 
 		case M_FORMAT :
 			// Create new (empty) image file
+			if (init_image_file(imgfile_fd))
+			{
+				VERBOSE("Image file created successfully.\n")
+			}
+			else
+			{
+				error(0, errno, "Can't create image file");
+			}
 			break;
 
 		default :
