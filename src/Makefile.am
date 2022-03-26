@@ -15,4 +15,5 @@ m2disk_SOURCES = \
 	m2disk.c \
 	m2disk.h \
 	m2d_usage.c m2d_usage.h	\
-	m2d_medos.c m2d_medos.h
+	m2d_medos.c m2d_medos.h \
+	m2d_time.c m2d_time.h
