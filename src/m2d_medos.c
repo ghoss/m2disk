@@ -10,88 +10,9 @@
 //=====================================================
 
 #include <string.h>
-#include "m2d_time.h"
+#include <byteswap.h>
 #include "m2d_medos.h"
 
-
-// Disk structure definitions
-//
-#define M2D_MAX_FILLER		27
-#define M2D_MAX_SONS		16
-#define M2D_PAGETAB_LEN		96
-#define M2D_EXTNAME_LEN		24
-
-// Position
-typedef struct {
-	uint16_t block;
-	uint16_t byte;
-} file_pos_t;
-
-// File descriptor kind
-#define FDK_NOFILE	0
-#define FDK_FATHER	1
-#define FDK_SON		2
-
-// File Descriptor
-typedef struct {
-	uint16_t reserved;
-	uint16_t file_num;	// File number
-	uint16_t version;
-	uint16_t fd_kind;	// File descriptor kind
-	union
-	{
-		uint16_t filler[M2D_MAX_FILLER + 1];
-		struct {
-			file_pos_t len;
-			uint16_t mod_flag;
-			uint16_t ref_flag;
-			uint16_t prot_flag;
-			tm_minute_t ctime;
-			tm_minute_t mtime;
-			uint16_t fres[4];
-			uint16_t sontab[M2D_MAX_SONS - 1];
-		} father;
-		struct {
-			uint16_t father_num;
-			uint16_t father_vers;
-			uint16_t son_num;
-		} son;
-	} fdk;
-	uint16_t page_tab[M2D_PAGETAB_LEN];
-} file_desc_t;
-
-// Name descriptor
-#define NDK_FREE	0
-#define NDK_FNAME	1
-
-typedef struct {
-	char en[M2D_EXTNAME_LEN];
-	uint16_t nd_kind;
-	uint16_t file_num;
-	uint16_t version;
-	uint16_t fres;
-} name_desc_t;
-
-// Disk dimensions
-#define DK_SECTOR_SZ	256		// Size of a sector in bytes
-#define DK_NUM_SECTORS	37632	// Number of sectors on disk
-#define DK_NUM_FILES	768		// Max. number of files on disk
-#define DK_NUM_ND_SECT	(DK_SECTOR_SZ / sizeof(name_desc_t))
-#define DK_NIL_PAGE		61152	// Value of the NIL page pointer
-
-// Disk sector
-typedef struct {
-	union {
-		uint8_t b[DK_SECTOR_SZ];
-		file_desc_t fd;
-		name_desc_t nd[DK_NUM_ND_SECT];
-	} type;
-} disk_sector_t;
-
-// Special file locations
-#define DK_DIR_START	2256	// 1st file directory sector
-#define DK_NAME_START	2352	// 1st name directory sector
-#define DK_NAMEDIR_LEN	(DK_NUM_FILES / DK_NUM_ND_SECT)
 
 // Reserved file entries
 #define DK_NUM_RESFILES	9
@@ -121,7 +42,12 @@ const reserved_file_t reserved_file[DK_NUM_RESFILES] =
 //
 bool write_sector(FILE *f, disk_sector_t *s, uint16_t n)
 {
-	return (fwrite(&s, DK_SECTOR_SZ, 1, f) == 1);
+	bool res = (fseek(f, n * DK_SECTOR_SZ, SEEK_SET) != -1)
+		&& (fwrite(s, DK_SECTOR_SZ, 1, f) == 1);
+
+	if (! res)
+		error(0, errno, "write_sector(%d) failed", n);
+	return res;
 }
 
 
@@ -130,7 +56,12 @@ bool write_sector(FILE *f, disk_sector_t *s, uint16_t n)
 //
 bool read_sector(FILE *f, disk_sector_t *s, uint16_t n)
 {
-	return (fread(&s, DK_SECTOR_SZ, 1, f) == 1);
+	bool res = (fseek(f, n * DK_SECTOR_SZ, SEEK_SET) != -1)
+		&& (fread(s, DK_SECTOR_SZ, 1, f) == 1);
+		
+	if (! res)
+		error(0, errno, "read_sector(%d) failed", n);
+	return res;
 }
 
 
@@ -148,6 +79,7 @@ bool init_disk_space(FILE *f)
 		if (! write_sector(f, &s, i))
 			return false;
 	}
+	VERBOSE("Created empty image file: OK\n")
 	return true;
 }
 
@@ -170,15 +102,16 @@ bool init_file_dir(FILE *f)
 
 	// Initialize page table
 	for (uint16_t i = 0; i < M2D_PAGETAB_LEN; i ++)
-		fdp->page_tab[i] = DK_NIL_PAGE;
+		fdp->page_tab[i] = bswap_16(DK_NIL_PAGE);
 
 	// Write empty file directory to disk
 	for (uint16_t i = 0; i < DK_NUM_FILES; i ++)
 	{
-		fdp->file_num = i;
+		fdp->file_num = bswap_16(i);
 		if (! write_sector(f, &s, DK_DIR_START + i))
 			return false;
 	}
+	VERBOSE("Created empty file directory: OK\n")
 	return true;
 }
 
@@ -196,7 +129,7 @@ bool init_name_dir(FILE *f)
 		name_desc_t *ndp = &(s.type.nd[i]);
 
 		memset(&(ndp->en), ' ', M2D_EXTNAME_LEN);
-		ndp->nd_kind = 0;
+		ndp->nd_kind = NDK_FREE;
 		ndp->file_num = 0;
 		ndp->version = 0;
 		ndp->fres = 0;
@@ -208,6 +141,7 @@ bool init_name_dir(FILE *f)
 		if (! write_sector(f, &s, DK_NAME_START + i))
 			return false;
 	}
+	VERBOSE("Created empty name directory: OK\n")
 	return true;
 }
 
@@ -226,9 +160,9 @@ bool init_reserved_files(FILE *f)
 		if (! read_sector(f, &s, DK_DIR_START + i))
 			return false;
 
-		fdp->fd_kind = 1;
-		fdp->fdk.father.len.block = reserved_file[i].blocks;
-		fdp->fdk.father.ref_flag = 1;
+		fdp->fd_kind = bswap_16(FDK_FATHER);
+		fdp->fdk.father.len.block = bswap_16(reserved_file[i].blocks);
+		fdp->fdk.father.ref_flag = bswap_16(1);
 		get_system_time(&fdp->fdk.father.ctime);
 		get_system_time(&fdp->fdk.father.mtime);
 
@@ -236,10 +170,10 @@ bool init_reserved_files(FILE *f)
 		uint16_t start = reserved_file[i].start;
 
 		for (uint16_t j = 0; j < blocks; j ++)
-			fdp->page_tab[j] = (start + j) * 13;
+			fdp->page_tab[j] = bswap_16((start + j) * 13);
 
 		for (uint16_t j = 0; j < M2D_MAX_SONS - 1; j ++)
-			fdp->fdk.father.sontab[j] = DK_NIL_PAGE;
+			fdp->fdk.father.sontab[j] = bswap_16(DK_NIL_PAGE);
 
 		// Write directory entry to disk
 		if (! write_sector(f, &s, DK_DIR_START + i))
@@ -251,13 +185,15 @@ bool init_reserved_files(FILE *f)
 
 		name_desc_t *ndp = &(s.type.nd[i % DK_NUM_ND_SECT]);
 		memcpy(&(ndp->en[0]), &(reserved_file[i].en[0]), M2D_EXTNAME_LEN);
-		ndp->nd_kind = 1;
-		ndp->file_num = i;
-		ndp->version = DK_NIL_PAGE;
+		ndp->nd_kind = bswap_16(NDK_FNAME);
+		ndp->file_num = bswap_16(i);
+		ndp->version = bswap_16(DK_NIL_PAGE);
 
 		// Write name directory entry to disk
 		if (! write_sector(f, &s, (DK_NAME_START + i) / DK_NUM_ND_SECT))
 			return false;
+
+		VERBOSE("Created reserved file: %16s\n", ndp->en)
 	}
 	return true;
 }

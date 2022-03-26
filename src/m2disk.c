@@ -9,6 +9,7 @@
 
 #include "m2disk.h"
 #include "m2d_usage.h"
+#include "m2d_listdir.h"
 #include "m2d_medos.h"
 
 
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
 	switch (mode)
 	{
 		case M_LISTDIR :
-			// ob_listdir(imgfile_fd, filearg, brute, verbose);
+			m2d_listdir(imgfile_fd, filearg);
 			break;
 
 		case M_EXTRACT :
