@@ -13,22 +13,27 @@
 #include "m2d_listdir.h"
 
 
+// Callback to print a directory entry
+//
+void print_dir(dir_entry_t *d)
+{
+	printf(
+		"%c%c %.26s%4d%9d%12d\n",
+		(d->reserved != 0) ? '*' : ' ',
+		(d->protected != 0) ? 'R' : ' ',
+		d->name,
+		d->filenum,
+		d->len,
+		d->mtime
+	);
+};
+
+
 // m2d_listdir
 // List filesystem directory with optional wildcard filter
 //
 void m2d_listdir(FILE *f, char *filearg)
 {
-    // Callback to print a directory entry
-    //
-    void print_dir(dir_entry_t *d)
-    {
-		printf(
-			"%.26s%5d%10d\n", 
-			d->name,
-			d->filenum,
-			d->mtime
-		);
-    };
 
 	// Traverse the directory tree starting at its root
 	m2d_traverse(f, filearg, print_dir);

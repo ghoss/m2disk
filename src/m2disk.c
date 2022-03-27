@@ -10,6 +10,7 @@
 #include "m2disk.h"
 #include "m2d_usage.h"
 #include "m2d_listdir.h"
+#include "m2d_import.h"
 #include "m2d_medos.h"
 
 
@@ -35,10 +36,11 @@ int main(int argc, char **argv)
 	char *filearg = NULL;
 	mode_type mode = M_UNKNOWN;
 	bool force = false;
+	bool convert = false;
 
 	// Parse command line options
 	opterr = 0;
-	while ((c = getopt (argc, argv, "Vvlxhfd:ic")) != -1)
+	while ((c = getopt (argc, argv, "Vvlxhftd:ic")) != -1)
 	{
 		switch (c)
 		{
@@ -53,6 +55,9 @@ int main(int argc, char **argv)
 			case 'x' :
 				mode = M_EXTRACT;
 				break;
+			
+			case 'i' :
+				mode = M_IMPORT;
 
 			case 'd' :
 				outdir = optarg;
@@ -64,6 +69,10 @@ int main(int argc, char **argv)
 
 			case 'f' :
 				force = true;
+				break;
+
+			case 't' :
+				convert = true;
 				break;
 
 			case 'h' :
@@ -90,15 +99,28 @@ int main(int argc, char **argv)
 	{
 		// Get image file name
 		imgfile = argv[optind];
-		if (! (imgfile_fd = fopen(imgfile, (mode == M_FORMAT) ? "w+" :"r+")))
+		imgfile_fd = fopen(imgfile, "r+");
+		if (mode == M_FORMAT)
 		{
+			// In format mode, overwrite existing files only if forced
+			if ((imgfile_fd == NULL) || force)
+			{
+				imgfile_fd = freopen(imgfile, "w+", imgfile_fd);
+			}
+			else
+			{
+				error(1, errno, 
+					"Image file '%s' exists (use -f to overwrite)",
+					imgfile
+				);
+			}
+		}
+		if (imgfile_fd == NULL)
 			error(1, errno, "Can't open image file '%s'", imgfile);
-		}
+
 		if (verbose)
-		{
 			m2d_version();
-			VERBOSE("> Image file name: %s\n", imgfile)
-		}
+		VERBOSE("> Image file name: %s\n", imgfile)
 	}
 	else
 	{
@@ -106,18 +128,18 @@ int main(int argc, char **argv)
 	}
 
 	// Check for optional file_arg argument
-	if (optind + 1 < argc)
+	if ((mode == M_EXTRACT) || (mode == M_LISTDIR))
 	{
-		filearg = argv[optind + 1];
-	}
-	if (verbose)
-	{
-		if (mode != M_FORMAT)
+		if (optind + 1 < argc)
+		{
 			VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
-		if (force)
-			VERBOSE("> Force mode enabled; existing files will be overwritten\n")
+			filearg = argv[optind + 1];
+		}
 	}
 
+	if (force)
+		VERBOSE("> Force mode enabled; existing files will be overwritten\n")
+	
 	// Execute requested program function
 	switch (mode)
 	{
@@ -134,19 +156,35 @@ int main(int argc, char **argv)
 			}
 			if (verbose)
 				VERBOSE("> Destination dir: '%s'\n", outdir ? outdir : ".")
-
+			if (convert)
+				VERBOSE("> Text file conversion enabled\n")
 			// m2d_extract(imgfile_fd, filearg, outdir, force, verbose);
 			break;
 
-		case M_IMPORT :
+		case M_IMPORT : {
 			// Import files into image
+			uint16_t ok = 0;
+			if (convert)
+				VERBOSE("> Text file conversion enabled\n")
+
+			for (uint16_t j = optind + 1; j < argc; j ++)
+			{
+				if (m2d_import(imgfile_fd, argv[j], convert))
+				{
+					ok ++;
+					VERBOSE("%s\n", argv[j])
+				}
+			}
+			if (ok == 0)
+				VERBOSE("> No files imported.\n")
 			break;
+		}
 
 		case M_FORMAT :
 			// Create new (empty) image file
 			if (init_image_file(imgfile_fd))
 			{
-				VERBOSE("Image file created successfully.\n")
+				VERBOSE("> Image file created successfully.\n")
 			}
 			else
 			{

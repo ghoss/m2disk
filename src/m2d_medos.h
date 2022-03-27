@@ -43,7 +43,7 @@ struct file_desc_t {
 	union
 	{
 		uint16_t filler[M2D_MAX_FILLER + 1];
-		struct {
+		struct fd_father_t {
 			struct file_pos_t len;
 			uint16_t mod_flag;
 			uint16_t ref_flag;

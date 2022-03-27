@@ -41,11 +41,24 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				bzero(d.name, M2D_EXTNAME_LEN + 1);
 				strncpy(d.name, ndp->en, M2D_EXTNAME_LEN);
 
-				// Set remaining file info
+				// Load associated file descriptor from disk
 				d.filenum = bswap_16(ndp->file_num);
-				d.reserved = 0;
-				d.len = 0;
-				d.mtime = 0;
+
+				struct disk_sector_t s1;
+				if (! read_sector(f, &s1, DK_DIR_START + d.filenum))
+					break;
+
+				// Set remaining file info from file descriptor
+				struct file_desc_t *fdp = &s1.type.fd;
+				d.reserved = bswap_16(fdp->reserved);
+
+				struct fd_father_t *fa = &s1.type.fd.fdk.father;
+				d.len = bswap_16(fa->len.block) * DK_SECTOR_SZ 
+					+ bswap_16(fa->len.byte);
+
+				d.mtime = bswap_16(fa->mtime.day);
+				d.ctime = fa->ctime.day;
+				d.protected = bswap_16(fa->prot_flag);
 
 				// Callback procedure
 				callproc(&d);
