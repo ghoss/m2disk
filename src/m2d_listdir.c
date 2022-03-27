@@ -23,8 +23,10 @@ void m2d_listdir(FILE *f, char *filearg)
     void print_dir(dir_entry_t *d)
     {
 		printf(
-			"FILE %-26s\n", 
-			d->name
+			"%.26s%5d%10d\n", 
+			d->name,
+			d->filenum,
+			d->mtime
 		);
     };
 

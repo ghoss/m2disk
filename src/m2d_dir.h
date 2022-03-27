@@ -18,6 +18,7 @@
 // Consolidated directory entry
 typedef struct {
 	char name[M2D_EXTNAME_LEN + 1];		// File name (null-termninated)
+	uint16_t filenum;					// Logical file number
 	uint16_t reserved;					// Reserved file flag
 	uint32_t len;						// Length in bytes
 	uint32_t mtime;						// Modification time

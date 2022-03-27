@@ -15,7 +15,7 @@
 // get_system_time()
 // Assigns the current system time to the supplied variable
 //
-void get_system_time(tm_minute_t *tm)
+void get_system_time(struct tm_minute_t *tm)
 {
 	tm->day = 0;
 	tm->min = 0;

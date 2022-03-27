@@ -19,7 +19,7 @@
 //
 void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 {
-	disk_sector_t s;
+	struct disk_sector_t s;
 
 	// Scan all sectors in name directory
 	for (uint16_t i = 0; i < DK_NAMEDIR_LEN; i ++)
@@ -30,7 +30,7 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 		// Scan name entries in each sector
 		for (uint16_t j = 0; j < DK_NUM_ND_SECT; j ++)
 		{
-			name_desc_t *ndp = &(s.type.nd[j]);
+			struct name_desc_t *ndp = &s.type.nd[j];
 
 			// Skip free entries
 			if (ndp->nd_kind == bswap_16(NDK_FNAME))
@@ -38,10 +38,11 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				dir_entry_t d;
 
 				// Make null-terminated filename
-				bzero(&d.name, M2D_EXTNAME_LEN + 1);
-				strncpy(&(d.name[0]), &(ndp->en[0]), M2D_EXTNAME_LEN);
+				bzero(d.name, M2D_EXTNAME_LEN + 1);
+				strncpy(d.name, ndp->en, M2D_EXTNAME_LEN);
 
 				// Set remaining file info
+				d.filenum = bswap_16(ndp->file_num);
 				d.reserved = 0;
 				d.len = 0;
 				d.mtime = 0;

@@ -16,14 +16,14 @@
 
 
 // Lilith time data type
-typedef struct {
+struct tm_minute_t {
 	uint16_t day;
 	uint16_t min;
-} tm_minute_t;
+};
 
 
 // Function declarations
 //
-void get_system_time(tm_minute_t *tm);
+void get_system_time(struct tm_minute_t *tm);
 
 #endif
