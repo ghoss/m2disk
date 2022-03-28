@@ -9,6 +9,7 @@
 
 #include "m2disk.h"
 #include "m2d_usage.h"
+#include "m2d_extract.h"
 #include "m2d_listdir.h"
 #include "m2d_import.h"
 #include "m2d_medos.h"
@@ -131,10 +132,9 @@ int main(int argc, char **argv)
 	if ((mode == M_EXTRACT) || (mode == M_LISTDIR))
 	{
 		if (optind + 1 < argc)
-		{
-			VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
 			filearg = argv[optind + 1];
-		}
+
+		VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
 	}
 
 	if (force)
@@ -145,6 +145,7 @@ int main(int argc, char **argv)
 	{
 		case M_LISTDIR :
 			m2d_listdir(imgfile_fd, filearg);
+			VERBOSE("\n")
 			break;
 
 		case M_EXTRACT :
@@ -158,7 +159,9 @@ int main(int argc, char **argv)
 				VERBOSE("> Destination dir: '%s'\n", outdir ? outdir : ".")
 			if (convert)
 				VERBOSE("> Text file conversion enabled\n")
-			// m2d_extract(imgfile_fd, filearg, outdir, force, verbose);
+			VERBOSE("\n")
+
+			m2d_extract(imgfile_fd, filearg, force, convert);
 			break;
 
 		case M_IMPORT : {

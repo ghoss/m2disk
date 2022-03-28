@@ -5,6 +5,7 @@
 .DS_Store
 .deps
 .dirstamp
+.vscode
 bin
 *~
 *.o

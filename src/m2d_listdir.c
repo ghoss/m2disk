@@ -18,7 +18,7 @@
 void print_dir(dir_entry_t *d)
 {
 	printf(
-		"%c%c %.26s%4d%9d%12d\n",
+		"%c%c %-26.26s%4d%9d%12d\n",
 		(d->reserved != 0) ? '*' : ' ',
 		(d->protected != 0) ? 'R' : ' ',
 		d->name,

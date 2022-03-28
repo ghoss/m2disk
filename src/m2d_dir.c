@@ -38,8 +38,12 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				dir_entry_t d;
 
 				// Make null-terminated filename
-				bzero(d.name, M2D_EXTNAME_LEN + 1);
 				strncpy(d.name, ndp->en, M2D_EXTNAME_LEN);
+				for (int16_t k = M2D_EXTNAME_LEN; k >= 0; k --)
+				{
+					if (d.name[k] == ' ')
+						d.name[k] = '\0';
+				}
 
 				// Load associated file descriptor from disk
 				d.filenum = bswap_16(ndp->file_num);
