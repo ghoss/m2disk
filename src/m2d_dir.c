@@ -58,8 +58,11 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				if (! read_sector(f, &s1, DK_DIR_START + (i * 8 + j)))
 					break;
 
-				// Set remaining file info from file descriptor
+				// Copy page table
 				struct file_desc_t *fdp = &s1.type.fd;
+				memcpy(d.page_tab, fdp->page_tab, sizeof(d.page_tab));
+
+				// Set remaining file info from file descriptor
 				d.reserved = bswap_16(fdp->reserved);
 				if (d.filenum != bswap_16(fdp->file_num))
 					error(1, 0, 

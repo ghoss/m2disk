@@ -24,6 +24,7 @@ typedef struct {
 	uint32_t len;						// Length in bytes
 	uint32_t ctime;						// Creation time
 	uint32_t mtime;						// Modification time
+	uint16_t page_tab[M2D_PAGETAB_LEN];	// Pages used by file
 } dir_entry_t;
 
 
