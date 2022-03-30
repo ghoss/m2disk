@@ -37,6 +37,30 @@ const struct reserved_file_t reserved_file[DK_NUM_RESFILES] =
 };
 
 
+// text_convert()
+// Converts all line endings in the given sector
+//
+#define M2_EOL	'\036'
+#define UX_EOL	'\n'
+
+void text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix)
+{
+	uint8_t *p = s->type.b;
+
+	for (uint16_t i = 0; i < n; i ++, p ++)
+	{
+		if (*p == M2_EOL)
+		{
+			if (to_unix) *p = UX_EOL;
+		}
+		else if (*p == UX_EOL)
+		{
+			if (! to_unix) *p = M2_EOL;
+		}
+	}
+}
+
+
 // calc_image_sector()
 // Calculate the actual disk sector in the image from a
 // given logical (sequential) sector number

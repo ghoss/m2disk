@@ -24,16 +24,17 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 		VERBOSE("%s (%d bytes)... ", d->name, d->len)
 		uint32_t len = d->len;
 		uint16_t i = 0;
-		uint16_t page = bswap_16(d->page_tab[i]) / 13;
+		uint16_t page = (bswap_16(d->page_tab[i]) / 13) * 8;
 
 		// Open target file
 		FILE *of = fopen(d->name, "r");
-		if ((of != NULL) && (! force))
+		if (of != NULL)
 		{
 			fclose(of);
-			error(1, 0, "File exists (use -f)");
+			if (! force)
+				error(1, 0, "File exists (use -f)");
 		}
-		if ((of = freopen(d->name, "w", of)) == NULL)
+		if ((of = fopen(d->name, "w")) == NULL)
 			error(1, errno, "Can't create file");
 
 		// Loop through each page entry (1 page = 8 sectors)
@@ -55,13 +56,24 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 				uint16_t max_byte = (len > DK_SECTOR_SZ)
 					? DK_SECTOR_SZ : len;
 
-				// Write the correct number of bytes to destination
-				if (fwrite(&s, max_byte, 1, of) != 1)
-					error(1, errno, "Can't write to '%s'", d->name);
+				if (max_byte > 0)
+				{
+					// Perform optional text conversion
+					if (convert)
+						text_convert(&s, max_byte, true);
 
-				len -= max_byte;
+					// Write the correct number of bytes to destination
+					if (fwrite(&s, max_byte, 1, of) != 1)
+					{
+						error(1, errno, 
+							"Can't write %d bytes to '%s'", 
+							max_byte, d->name
+						);
+					}
+					len -= max_byte;
+				}
 			}
-			page = bswap_16(d->page_tab[++ i]) / 13;
+			page = (bswap_16(d->page_tab[++ i]) / 13) * 8;
 		}
 		if (len != 0)
 			error(0, 0, "File length mismatch in '%s'", d->name);
