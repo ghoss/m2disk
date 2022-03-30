@@ -49,12 +49,16 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				d.filenum = bswap_16(ndp->file_num);
 
 				struct disk_sector_t s1;
-				if (! read_sector(f, &s1, DK_DIR_START + d.filenum))
+				if (! read_sector(f, &s1, DK_DIR_START + (i * 8 + j)))
 					break;
 
 				// Set remaining file info from file descriptor
 				struct file_desc_t *fdp = &s1.type.fd;
 				d.reserved = bswap_16(fdp->reserved);
+				if (d.filenum != bswap_16(fdp->file_num))
+					error(1, 0, 
+						"Directory entry mismatch (file# %d)", d.filenum
+					);
 
 				struct fd_father_t *fa = &s1.type.fd.fdk.father;
 				d.len = bswap_16(fa->len.block) * DK_SECTOR_SZ 

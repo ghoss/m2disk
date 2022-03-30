@@ -78,8 +78,8 @@ struct name_desc_t {
 };
 
 // Disk dimensions
+#define DK_NUM_SECTORS	37632	// Total number of sectors on disk
 #define DK_SECTOR_SZ	256		// Size of a sector in bytes
-#define DK_NUM_SECTORS	37632	// Number of sectors on disk
 #define DK_NUM_FILES	768		// Max. number of files on disk
 #define DK_NUM_ND_SECT	(DK_SECTOR_SZ / sizeof(struct name_desc_t))
 #define DK_NIL_PAGE		61152	// Value of the NIL page pointer

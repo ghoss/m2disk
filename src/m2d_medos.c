@@ -37,11 +37,34 @@ const struct reserved_file_t reserved_file[DK_NUM_RESFILES] =
 };
 
 
+// calc_image_sector()
+// Calculate the actual disk sector in the image from a
+// given logical (sequential) sector number
+//
+#define N_TRACKS	96
+#define N_SECTORS	48
+#define N_HEADS		2
+
+uint16_t calc_image_sector(uint16_t n)
+{
+	uint16_t c, h, s;	// Cylinder, head, sector
+
+	c = n / N_TRACKS;
+	h = (n / N_SECTORS ) % N_HEADS;
+	s = (n % N_SECTORS) * ((c < 15) ? 3 : 12);
+	s = (s % N_SECTORS) + (s / N_SECTORS);
+
+	return (c * N_TRACKS) + (h * N_SECTORS) + s;   
+}
+
+
 // write_sector()
 // Writes sector number n to disk
 //
 bool write_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 {
+	n = calc_image_sector(n);
+
 	bool res = (fseek(f, n * DK_SECTOR_SZ, SEEK_SET) != -1)
 		&& (fwrite(s, DK_SECTOR_SZ, 1, f) == 1);
 
@@ -56,6 +79,8 @@ bool write_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 //
 bool read_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 {
+	n = calc_image_sector(n);
+	
 	bool res = (fseek(f, n * DK_SECTOR_SZ, SEEK_SET) != -1)
 		&& (fread(s, DK_SECTOR_SZ, 1, f) == 1);
 		
@@ -138,7 +163,10 @@ bool init_name_dir(FILE *f)
 	for (uint16_t i = 0; i < DK_NAMEDIR_LEN; i ++)
 	{
 		for (uint16_t j = 0; j < DK_NUM_ND_SECT; j ++)
-			s.type.nd[j].file_num = bswap_16(i * DK_NUM_ND_SECT + j);
+		{
+			uint16_t sn = i * DK_NUM_ND_SECT + j;
+			s.type.nd[j].file_num = bswap_16(sn);
+		}
 
 		if (! write_sector(f, &s, DK_NAME_START + i))
 			return false;
@@ -158,7 +186,8 @@ bool init_reserved_files(FILE *f)
 	// Part 1: Make directory entry
 	for (uint16_t i = 0; i < DK_NUM_RESFILES; i ++)
 	{
-		if (! read_sector(f, &s, DK_DIR_START + i))
+		uint16_t sn = DK_DIR_START + i;
+		if (! read_sector(f, &s, sn))
 			return false;
 
 		struct file_desc_t *fdp = &s.type.fd;
@@ -180,7 +209,7 @@ bool init_reserved_files(FILE *f)
 			fa->sontab[j] = bswap_16(DK_NIL_PAGE);
 
 		// Write directory entry to disk
-		if (! write_sector(f, &s, DK_DIR_START + i))
+		if (! write_sector(f, &s, sn))
 			return false;
 	}
 
