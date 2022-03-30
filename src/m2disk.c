@@ -12,6 +12,7 @@
 #include "m2d_extract.h"
 #include "m2d_listdir.h"
 #include "m2d_import.h"
+#include "m2d_pagemap.h"
 #include "m2d_medos.h"
 
 
@@ -170,7 +171,10 @@ int main(int argc, char **argv)
 			if (convert)
 				VERBOSE("> Text file conversion enabled\n")
 
+			// Load pagemap since we must find unused sectors
+			m2d_load_pagemap(imgfile_fd);
 
+			// Run through each source file argument
 			for (uint16_t j = optind + 1; j < argc; j ++)
 			{
 				if (m2d_import(imgfile_fd, argv[j], convert))
