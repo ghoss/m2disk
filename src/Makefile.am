@@ -20,4 +20,5 @@ m2disk_SOURCES = \
 	m2d_dir.c m2d_dir.h \
 	m2d_listdir.c m2d_listdir.h \
 	m2d_import.c m2d_import.h \
-	m2d_extract.c m2d_extract.h
+	m2d_extract.c m2d_extract.h \
+	m2d_pagemap.c m2d_pagemap.h

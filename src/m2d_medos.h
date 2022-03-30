@@ -101,9 +101,9 @@ struct disk_sector_t {
 
 // Function declarations
 //
-void text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix);
-bool init_image_file(FILE *f);
-bool write_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
-bool read_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
+void m2d_text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix);
+bool m2d_init_image(FILE *f);
+bool m2d_write_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
+bool m2d_read_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
 
 #endif

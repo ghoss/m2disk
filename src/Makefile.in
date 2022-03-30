@@ -111,7 +111,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_m2disk_OBJECTS = m2disk.$(OBJEXT) m2d_usage.$(OBJEXT) \
 	m2d_time.$(OBJEXT) m2d_medos.$(OBJEXT) m2d_dir.$(OBJEXT) \
 	m2d_listdir.$(OBJEXT) m2d_import.$(OBJEXT) \
-	m2d_extract.$(OBJEXT)
+	m2d_extract.$(OBJEXT) m2d_pagemap.$(OBJEXT)
 m2disk_OBJECTS = $(am_m2disk_OBJECTS)
 m2disk_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -132,8 +132,8 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/m2d_dir.Po \
 	./$(DEPDIR)/m2d_extract.Po ./$(DEPDIR)/m2d_import.Po \
 	./$(DEPDIR)/m2d_listdir.Po ./$(DEPDIR)/m2d_medos.Po \
-	./$(DEPDIR)/m2d_time.Po ./$(DEPDIR)/m2d_usage.Po \
-	./$(DEPDIR)/m2disk.Po
+	./$(DEPDIR)/m2d_pagemap.Po ./$(DEPDIR)/m2d_time.Po \
+	./$(DEPDIR)/m2d_usage.Po ./$(DEPDIR)/m2disk.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -271,7 +271,8 @@ m2disk_SOURCES = \
 	m2d_dir.c m2d_dir.h \
 	m2d_listdir.c m2d_listdir.h \
 	m2d_import.c m2d_import.h \
-	m2d_extract.c m2d_extract.h
+	m2d_extract.c m2d_extract.h \
+	m2d_pagemap.c m2d_pagemap.h
 
 all: all-am
 
@@ -364,6 +365,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_import.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_listdir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_medos.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_pagemap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2d_usage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/m2disk.Po@am__quote@ # am--include-marker
@@ -521,6 +523,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/m2d_import.Po
 	-rm -f ./$(DEPDIR)/m2d_listdir.Po
 	-rm -f ./$(DEPDIR)/m2d_medos.Po
+	-rm -f ./$(DEPDIR)/m2d_pagemap.Po
 	-rm -f ./$(DEPDIR)/m2d_time.Po
 	-rm -f ./$(DEPDIR)/m2d_usage.Po
 	-rm -f ./$(DEPDIR)/m2disk.Po
@@ -574,6 +577,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/m2d_import.Po
 	-rm -f ./$(DEPDIR)/m2d_listdir.Po
 	-rm -f ./$(DEPDIR)/m2d_medos.Po
+	-rm -f ./$(DEPDIR)/m2d_pagemap.Po
 	-rm -f ./$(DEPDIR)/m2d_time.Po
 	-rm -f ./$(DEPDIR)/m2d_usage.Po
 	-rm -f ./$(DEPDIR)/m2disk.Po

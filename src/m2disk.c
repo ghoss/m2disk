@@ -170,6 +170,7 @@ int main(int argc, char **argv)
 			if (convert)
 				VERBOSE("> Text file conversion enabled\n")
 
+
 			for (uint16_t j = optind + 1; j < argc; j ++)
 			{
 				if (m2d_import(imgfile_fd, argv[j], convert))
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
 
 		case M_FORMAT :
 			// Create new (empty) image file
-			if (init_image_file(imgfile_fd))
+			if (m2d_init_image(imgfile_fd))
 			{
 				VERBOSE("> Image file created successfully.\n")
 			}

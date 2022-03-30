@@ -24,6 +24,9 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 		VERBOSE("%s (%d bytes)... ", d->name, d->len)
 		uint32_t len = d->len;
 		uint16_t i = 0;
+
+		// Page entry / 13 = actual page address
+		// (see SEK Medos-2 filesystem thesis p.74)
 		uint16_t page = (bswap_16(d->page_tab[i]) / 13) * 8;
 
 		// Open target file
@@ -50,7 +53,7 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 			{
 				// Read sector from image
 				struct disk_sector_t s;
-				read_sector(f, &s, page + j);
+				m2d_read_sector(f, &s, page + j);
 
 				// Find number of used bytes in this sector
 				uint16_t max_byte = (len > DK_SECTOR_SZ)
@@ -60,7 +63,7 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 				{
 					// Perform optional text conversion
 					if (convert)
-						text_convert(&s, max_byte, true);
+						m2d_text_convert(&s, max_byte, true);
 
 					// Write the correct number of bytes to destination
 					if (fwrite(&s, max_byte, 1, of) != 1)

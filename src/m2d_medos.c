@@ -43,7 +43,7 @@ const struct reserved_file_t reserved_file[DK_NUM_RESFILES] =
 #define M2_EOL	'\036'
 #define UX_EOL	'\n'
 
-void text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix)
+void m2d_text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix)
 {
 	uint8_t *p = s->type.b;
 
@@ -82,10 +82,10 @@ uint16_t calc_image_sector(uint16_t n)
 }
 
 
-// write_sector()
+// m2d_write_sector()
 // Writes sector number n to disk
 //
-bool write_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
+bool m2d_write_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 {
 	n = calc_image_sector(n);
 
@@ -98,10 +98,10 @@ bool write_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 }
 
 
-// read_sector()
+// m2d_read_sector()
 // Reads sector number n from disk
 //
-bool read_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
+bool m2d_read_sector(FILE *f, struct disk_sector_t *s, uint16_t n)
 {
 	n = calc_image_sector(n);
 	
@@ -125,7 +125,7 @@ bool init_disk_space(FILE *f)
 	bzero(&s, DK_SECTOR_SZ);
 	for (uint16_t i = 0; i < DK_NUM_SECTORS; i ++)
 	{
-		if (! write_sector(f, &s, i))
+		if (! m2d_write_sector(f, &s, i))
 			return false;
 	}
 	VERBOSE("Created empty image file: OK\n")
@@ -157,7 +157,7 @@ bool init_file_dir(FILE *f)
 	for (uint16_t i = 0; i < DK_NUM_FILES; i ++)
 	{
 		fdp->file_num = bswap_16(i);
-		if (! write_sector(f, &s, DK_DIR_START + i))
+		if (! m2d_write_sector(f, &s, DK_DIR_START + i))
 			return false;
 	}
 	VERBOSE("Created empty file directory: OK\n")
@@ -192,7 +192,7 @@ bool init_name_dir(FILE *f)
 			s.type.nd[j].file_num = bswap_16(sn);
 		}
 
-		if (! write_sector(f, &s, DK_NAME_START + i))
+		if (! m2d_write_sector(f, &s, DK_NAME_START + i))
 			return false;
 	}
 	VERBOSE("Created empty name directory: OK\n")
@@ -211,7 +211,7 @@ bool init_reserved_files(FILE *f)
 	for (uint16_t i = 0; i < DK_NUM_RESFILES; i ++)
 	{
 		uint16_t sn = DK_DIR_START + i;
-		if (! read_sector(f, &s, sn))
+		if (! m2d_read_sector(f, &s, sn))
 			return false;
 
 		struct file_desc_t *fdp = &s.type.fd;
@@ -220,8 +220,8 @@ bool init_reserved_files(FILE *f)
 		fa->len.block = bswap_16(reserved_file[i].blocks);
 		fa->len.byte = 0;
 		fa->ref_flag = fa->prot_flag = fdp->reserved = bswap_16(1);
-		get_system_time(&fa->ctime);
-		get_system_time(&fa->mtime);
+		m2d_system_time(&fa->ctime);
+		m2d_system_time(&fa->mtime);
 
 		uint16_t blocks = (reserved_file[i].blocks + 7) / 8;
 		uint16_t start = reserved_file[i].start;
@@ -233,7 +233,7 @@ bool init_reserved_files(FILE *f)
 			fa->sontab[j] = bswap_16(DK_NIL_PAGE);
 
 		// Write directory entry to disk
-		if (! write_sector(f, &s, sn))
+		if (! m2d_write_sector(f, &s, sn))
 			return false;
 	}
 
@@ -244,7 +244,7 @@ bool init_reserved_files(FILE *f)
 		uint16_t nsn1 = DK_NAME_START + (i / DK_NUM_ND_SECT);
 		if (nsn1 != nsn)
 		{
-			if (! read_sector(f, &s, nsn1))
+			if (! m2d_read_sector(f, &s, nsn1))
 				return false;
 			nsn = nsn1;
 		}
@@ -255,7 +255,7 @@ bool init_reserved_files(FILE *f)
 		ndp->version = bswap_16(DK_NIL_PAGE);
 
 		// Write name directory entry to disk
-		if (! write_sector(f, &s, nsn1))
+		if (! m2d_write_sector(f, &s, nsn1))
 			return false;
 
 		VERBOSE("Created reserved file: %24s\n", ndp->en)
@@ -268,7 +268,7 @@ bool init_reserved_files(FILE *f)
 // Creates an empty image file with an initialized directory and
 // the standard default files.
 //
-bool init_image_file(FILE *f)
+bool m2d_init_image(FILE *f)
 {
 	return init_disk_space(f)
 		&& init_file_dir(f)

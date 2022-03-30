@@ -25,7 +25,7 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 	// Scan all sectors in name directory
 	for (uint16_t i = 0; i < DK_NAMEDIR_LEN; i ++)
 	{
-		if (! read_sector(f, &s, DK_NAME_START + i))
+		if (! m2d_read_sector(f, &s, DK_NAME_START + i))
 			break;
 
 		// Scan name entries in each sector
@@ -55,7 +55,7 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 				d.filenum = bswap_16(ndp->file_num);
 
 				struct disk_sector_t s1;
-				if (! read_sector(f, &s1, DK_DIR_START + (i * 8 + j)))
+				if (! m2d_read_sector(f, &s1, DK_DIR_START + (i * 8 + j)))
 					break;
 
 				// Copy page table
