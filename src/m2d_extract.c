@@ -9,7 +9,6 @@
 // Published by Guido Hoss under GNU Public License V3.
 //=====================================================
 
-#include <fnmatch.h>
 #include "m2d_medos.h"
 #include "m2d_dir.h"
 #include "m2d_extract.h"
@@ -21,10 +20,6 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 {
 	void extract_file(dir_entry_t *d)
 	{
-		if ((filearg != NULL) 
-			&& (fnmatch(filearg, d->name, FNM_PATHNAME) != 0))
-			return;
-
 		VERBOSE("file '%s'\n", d->name)
 	};
 

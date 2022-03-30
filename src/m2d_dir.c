@@ -10,6 +10,7 @@
 //=====================================================
 
 #include <string.h>
+#include <fnmatch.h>
 #include <byteswap.h>
 #include "m2d_dir.h"
 
@@ -44,6 +45,11 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 					if (d.name[k] == ' ')
 						d.name[k] = '\0';
 				}
+
+				// Check if filename pattern matches
+				if ((filearg != NULL) 
+					&& (fnmatch(filearg, d.name, FNM_PATHNAME) != 0))
+					continue;
 
 				// Load associated file descriptor from disk
 				d.filenum = bswap_16(ndp->file_num);
