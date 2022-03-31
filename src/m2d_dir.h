@@ -30,6 +30,7 @@ typedef struct {
 
 // Forward declarations
 //
-void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *));
+void m2d_traverse(FILE *f, char *filearg, bool (*callproc)(dir_entry_t *));
+bool m2d_lookup_file(FILE *f, char *fn, dir_entry_t *d);
 
 #endif

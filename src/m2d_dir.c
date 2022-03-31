@@ -18,7 +18,7 @@
 // m2d_traverse()
 // Traverse directory
 //
-void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
+void m2d_traverse(FILE *f, char *filearg, bool (*callproc)(dir_entry_t *))
 {
 	struct disk_sector_t s;
 
@@ -82,4 +82,52 @@ void m2d_traverse(FILE *f, char *filearg, void (*callproc)(dir_entry_t *))
 			}
 		}
 	}
+}
+
+
+// m2d_lookup_file()
+// Checks for the directory entry with specified filename
+// Returns TRUE and the directory entry if file found.
+// Returns FALSE and the index of the first free directory
+// entry in d.idx if file not found
+//
+bool m2d_lookup_file(FILE *f, char *fn, dir_entry_t *d)
+{
+	int16_t curr_idx = -1;
+	int16_t first_free = -1;
+	bool found = false;
+
+	bool check_entry(dir_entry_t *dt)
+	{
+		if (strcmp(dt->name, fn) == 0)
+		{
+			// Entry exists; copy its information to caller
+			memcpy(d, dt, sizeof(dir_entry_t));
+			found = true;
+			return false;
+		}
+
+		// If not found, check for free gaps in file# sequence
+		if (dt->filenum > curr_idx + 1)
+		{
+			if (first_free == -1)
+				first_free = curr_idx + 1;
+		}
+		curr_idx = dt->filenum;
+		return true;
+	}
+
+	// Scan all directory entries
+	m2d_traverse(f, NULL, check_entry);
+
+	// If not found, report first free directory entry
+	if (! found)
+	{
+		if (first_free != -1)
+			d->filenum = first_free;
+		else
+			error(1, 0, "Directory full");
+	}
+
+	return found;
 }

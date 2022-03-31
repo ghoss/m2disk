@@ -19,7 +19,7 @@
 //
 void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 {
-	void extract_file(dir_entry_t *d)
+	bool extract_file(dir_entry_t *d)
 	{
 		VERBOSE("%s (%d bytes)... ", d->name, d->len)
 		uint32_t len = d->len;
@@ -83,8 +83,10 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 		
 		fclose(of);
 		VERBOSE("OK\n")
+
+		return true;
 	};
 
 	// Check all directory entries for match with "filearg"
-	m2d_traverse(f, filearg, &extract_file);
+	m2d_traverse(f, filearg, extract_file);
 }

@@ -15,7 +15,7 @@
 
 // Callback to print a directory entry
 //
-void print_dir(dir_entry_t *d)
+bool print_dir(dir_entry_t *d)
 {
 	printf(
 		"%c%c %-26.26s%4d%9d%12d\n",
@@ -26,6 +26,7 @@ void print_dir(dir_entry_t *d)
 		d->len,
 		d->mtime
 	);
+	return true;
 };
 
 

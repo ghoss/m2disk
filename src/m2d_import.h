@@ -17,6 +17,6 @@
 
 // Forward declarations
 //
-bool m2d_import(FILE *f, char *infile, bool convert);
+bool m2d_import(FILE *f, char *infile, bool force, bool convert);
 
 #endif
