@@ -63,6 +63,6 @@ original Lilith Modula-2 machine.
 
   Import the file named ```InOut.MOD``` from the current directory into the image file ```test.img```. 
 
-  * ```m2disk -ift test.img InOut.MOD```
+* ```m2disk -ift test.img InOut.MOD```
 
   Same as above, but perform text conversion and overwrite existing files with the same name(s) in the image. 
