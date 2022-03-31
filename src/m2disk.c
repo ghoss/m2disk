@@ -185,6 +185,7 @@ int main(int argc, char **argv)
 			}
 			if (ok == 0)
 				VERBOSE("> No files imported.\n")
+			VERBOSE("\n")
 			break;
 		}
 

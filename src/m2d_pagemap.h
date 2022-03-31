@@ -17,8 +17,8 @@
 
 // Forward declarations
 //
-void m2d_set_page(FILE *f, uint16_t n);
-uint16_t m2d_alloc_page(FILE *f);
+uint16_t m2d_find_free_page();
+void m2d_free_pages(uint16_t *pt);
 void m2d_load_pagemap(FILE *f);
 
 #endif

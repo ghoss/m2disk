@@ -25,8 +25,8 @@
 
 // Position
 struct file_pos_t {
-	uint16_t block;
-	uint16_t byte;
+	uint16_t sectors;
+	uint16_t bytes;
 };
 
 // File descriptor kind
@@ -105,5 +105,10 @@ void m2d_text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix);
 bool m2d_init_image(FILE *f);
 bool m2d_write_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
 bool m2d_read_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
+bool m2d_register_file(
+	FILE *f, char *fname,
+	uint16_t fnum, uint32_t sz, 
+	uint16_t pt[], bool reserved
+);
 
 #endif

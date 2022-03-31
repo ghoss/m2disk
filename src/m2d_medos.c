@@ -20,20 +20,20 @@
 struct reserved_file_t {
 	char *en;			// File name
 	uint16_t start;		// 1st sector number
-	uint16_t blocks;	// Number of sectors in file
+	uint16_t sectors;	// Number of sectors in file
 };
 
 const struct reserved_file_t reserved_file[DK_NUM_RESFILES] = 
 {
-	{ "FS.FileDirectory        ",	DK_DIR_START,	DK_NUM_FILES },
-	{ "FS.FileDirectory.Back   ",	36768,			DK_NUM_FILES },
-	{ "FS.NameDirectory        ",	DK_NAME_START, 	DK_NAMEDIR_LEN },
-	{ "FS.NameDirectory.Back   ",	37536,			DK_NAMEDIR_LEN },
-	{ "FS.BadPages             ",	0,				0 },
-	{ "PC.BootFile             ",	0,				192 },
-	{ "PC.BootFile.Back        ",	1248,			192 },
-	{ "PC.DumpFile             ",	192,			512 },
-	{ "PC.Dump1File            ",	704,			512 }
+	{ "FS.FileDirectory",		DK_DIR_START,	DK_NUM_FILES },
+	{ "FS.FileDirectory.Back",	36768,			DK_NUM_FILES },
+	{ "FS.NameDirectory",		DK_NAME_START, 	DK_NAMEDIR_LEN },
+	{ "FS.NameDirectory.Back",	37536,			DK_NAMEDIR_LEN },
+	{ "FS.BadPages",			0,				0 },
+	{ "PC.BootFile",			0,				192 },
+	{ "PC.BootFile.Back",		1248,			192 },
+	{ "PC.DumpFile",			192,			512 },
+	{ "PC.Dump1File",			704,			512 }
 };
 
 
@@ -200,65 +200,130 @@ bool init_name_dir(FILE *f)
 }
 
 
+// make_filedir_entry()
+// Makes a new file directory entry for the specified file
+//
+bool make_filedir_entry(
+	FILE *f,
+	uint16_t fnum, uint32_t sz, 
+	uint16_t pt[], bool reserved
+) {
+	struct disk_sector_t s;
+
+	uint16_t sn = DK_DIR_START + fnum;
+	if (! m2d_read_sector(f, &s, sn))
+		return false;
+
+	struct file_desc_t *fdp = &s.type.fd;
+	fdp->fd_kind = bswap_16(FDK_FATHER);
+	fdp->version ++;
+	
+	// Set file size
+	struct fd_father_t *fa = &fdp->fdk.father;
+	fa->len.sectors = bswap_16(sz / DK_SECTOR_SZ);
+	fa->len.bytes = bswap_16(sz % DK_SECTOR_SZ);
+
+	// Set file flags
+	fa->ref_flag = fa->prot_flag = fdp->reserved 
+		= bswap_16(reserved ? 1 : 0);
+
+	// Set file creation and modification times
+	m2d_system_time(&fa->ctime);
+	m2d_system_time(&fa->mtime);
+
+	// Copy page table
+	memcpy(fdp->page_tab, pt, M2D_PAGETAB_LEN * sizeof(uint16_t));
+
+	// Clear son table
+	for (uint16_t j = 0; j < M2D_MAX_SONS - 1; j ++)
+		fa->sontab[j] = bswap_16(DK_NIL_PAGE);
+
+	// Write directory entry to disk
+	if (! m2d_write_sector(f, &s, sn))
+		return false;
+
+	return true;
+}
+
+
+// make_namedir_entry()
+// Makes a new name director entry for the specified file
+//
+bool make_namedir_entry(FILE *f, char *fname, uint16_t fnum)
+{
+	// Convert null-terminated string to space-padded string
+	void convert_filename(char *m2f, char *uxf)
+	{
+		bool space = false;
+
+		for (uint16_t i = 0; i < M2D_EXTNAME_LEN; i ++)
+		{
+			if (*uxf == '\0')
+				space = true;
+			*m2f = space ? ' ' : *uxf;
+			m2f ++;
+			uxf ++;
+		}
+	}
+
+	struct disk_sector_t s;
+
+	uint16_t nsn = DK_NAME_START + (fnum / DK_NUM_ND_SECT);
+	if (! m2d_read_sector(f, &s, nsn))
+		return false;
+
+	struct name_desc_t *ndp = &s.type.nd[fnum % DK_NUM_ND_SECT];
+
+	convert_filename(&(ndp->en[0]), fname);
+	ndp->nd_kind = bswap_16(NDK_FNAME);
+	ndp->version = bswap_16(DK_NIL_PAGE);
+
+	// Write name directory entry to disk
+	if (! m2d_write_sector(f, &s, nsn))
+		return false;
+
+	return true;
+}
+
+
+// m2d_register_file()
+// Creates entries for a new file in the file and name
+// directories
+//
+bool m2d_register_file(
+	FILE *f, char *fname,
+	uint16_t fnum, uint32_t sz, 
+	uint16_t pt[], bool reserved
+) {
+	return make_filedir_entry(f, fnum, sz, pt, reserved)
+		&& make_namedir_entry(f, fname, fnum);
+}
+
+
 // init_reserved_files()
 // Initialize the reserved file entries
 //
 bool init_reserved_files(FILE *f)
 {
-	struct disk_sector_t s;
-
 	// Part 1: Make directory entry
 	for (uint16_t i = 0; i < DK_NUM_RESFILES; i ++)
 	{
-		uint16_t sn = DK_DIR_START + i;
-		if (! m2d_read_sector(f, &s, sn))
-			return false;
+		uint16_t pt[M2D_PAGETAB_LEN];
 
-		struct file_desc_t *fdp = &s.type.fd;
-		fdp->fd_kind = bswap_16(FDK_FATHER);
-		struct fd_father_t *fa = &fdp->fdk.father;
-		fa->len.block = bswap_16(reserved_file[i].blocks);
-		fa->len.byte = 0;
-		fa->ref_flag = fa->prot_flag = fdp->reserved = bswap_16(1);
-		m2d_system_time(&fa->ctime);
-		m2d_system_time(&fa->mtime);
-
-		uint16_t blocks = (reserved_file[i].blocks + 7) / 8;
+		uint16_t pages = reserved_file[i].sectors >> 3;
 		uint16_t start = reserved_file[i].start;
 
-		for (uint16_t j = 0; j < blocks; j ++)
-			fdp->page_tab[j] = bswap_16((start + j) * 13);
+		// Fill continuous page table
+		for (uint16_t j = 0; j < M2D_PAGETAB_LEN; j ++)
+			pt[j] = (j < pages) ? bswap_16((start + j) * 13) : DK_NIL_PAGE;
 
-		for (uint16_t j = 0; j < M2D_MAX_SONS - 1; j ++)
-			fa->sontab[j] = bswap_16(DK_NIL_PAGE);
-
-		// Write directory entry to disk
-		if (! m2d_write_sector(f, &s, sn))
+		bool res = m2d_register_file(
+			f, reserved_file[i].en,
+			i, reserved_file[i].sectors * DK_SECTOR_SZ, 
+			pt, true);
+			
+		if (! res) 
 			return false;
-	}
-
-	// Part 2: Make name directory entry
-	uint16_t nsn = 0;
-	for (uint16_t i = 0; i < DK_NUM_RESFILES; i ++)
-	{
-		uint16_t nsn1 = DK_NAME_START + (i / DK_NUM_ND_SECT);
-		if (nsn1 != nsn)
-		{
-			if (! m2d_read_sector(f, &s, nsn1))
-				return false;
-			nsn = nsn1;
-		}
-
-		struct name_desc_t *ndp = &s.type.nd[i % DK_NUM_ND_SECT];
-		memcpy(ndp->en, reserved_file[i].en, M2D_EXTNAME_LEN);
-		ndp->nd_kind = bswap_16(NDK_FNAME);
-		ndp->version = bswap_16(DK_NIL_PAGE);
-
-		// Write name directory entry to disk
-		if (! m2d_write_sector(f, &s, nsn1))
-			return false;
-
-		VERBOSE("Created reserved file: %24s\n", ndp->en)
 	}
 	return true;
 }
