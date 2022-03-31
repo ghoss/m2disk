@@ -1,8 +1,6 @@
 # Lilith Modula-2 Machine Disk Utility
 This is a disk utility to create image files in Lilith Machine Format (compatible with e.g. Jos Dreesen's **Emulith** Lilith Emulator). Also, this tool can import and export files from/to a Lilith image file.
 
-Work in progress. Not in a usable state yet!
-
 ## Compiling And Installation
 1. Download the .tar.gz packages from the "[Releases](https://github.com/ghoss/m2disk/releases)" page.
 2. Extract and build:
@@ -37,6 +35,34 @@ original Lilith Modula-2 machine.
 ```
 
 ## Examples
-* ```m2disk```
+* ```m2disk -c test.img```
 
-  (To be updated)
+  Create the empty Lilith disk image ```test.img```. NOTE: This creates directory entries for the mandatory reserved system files such as *FS.DumpFile*, *FS.BootFile* etc., but does **NOT** import them automatically. You must do this yourself via the ```-i``` function in order to make a bootable disk.
+
+* ```m2disk -cf test.img```
+
+  Same as above, but overwrite the image file if it already exists.
+
+* ```m2disk -l test.img```
+
+  List the contents of the image file ```test.img```.
+
+* ```m2disk -x test.img '*.DEF'```
+
+  Export all Lilith files ending in "*.DEF" from the image ```test.img``` to the current host directory. No text conversion is performed. NOTE: Wildcard file arguments as in the example must be enclosed in single quotes to avoid shell expansion.
+
+* ```m2disk -xf test.img '*.DEF'```
+
+  Same as above, but overwrite existing files with the same name(s) in the host directory.
+
+* ```m2disk -xt -d testdir test.img InOut.MOD```
+
+  Export the file named ```InOut.MOD``` from the image ```test.img``` to the target directory ```testdir``` and performs text conversion.
+
+* ```m2disk -i test.img InOut.MOD```
+
+  Import the file named ```InOut.MOD``` from the current directory into the image file ```test.img```. 
+
+  * ```m2disk -ift test.img InOut.MOD```
+
+  Same as above, but perform text conversion and overwrite existing files with the same name(s) in the image. 
