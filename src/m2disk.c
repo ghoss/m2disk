@@ -178,10 +178,7 @@ int main(int argc, char **argv)
 			for (uint16_t j = optind + 1; j < argc; j ++)
 			{
 				if (m2d_import(imgfile_fd, argv[j], force, convert))
-				{
 					ok ++;
-					VERBOSE("%s\n", argv[j])
-				}
 			}
 			if (ok == 0)
 				VERBOSE("> No files imported.\n")

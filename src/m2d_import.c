@@ -26,13 +26,6 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 {
 	dir_entry_t d;
 	FILE *infile_fd;
-	
-	// Check if filename is too long
-	if (strlen(infile) > M2D_EXTNAME_LEN)
-	{
-		error(0, 0, "Filename '%s' too long, ignored", infile);
-		return false;
-	}
 
 	// Open input file
 	if (((infile_fd = fopen(infile, "r"))) == NULL)
@@ -43,12 +36,21 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 
 	// Establish base name of input file
 	char *bname = basename(infile);
+	VERBOSE("%s... ", bname)
+	
+	// Check if filename is too long
+	if (strlen(bname) > M2D_EXTNAME_LEN)
+	{
+		error(0, 0, "Filename '%s' too long, ignored", infile);
+		fclose(infile_fd);
+		return false;
+	}
 
 	// Search for filename in image file directory
 	if (m2d_lookup_file(f, bname, &d))
 	{
 		// File found; file number in d.filenum
-		if (! force)
+		if (! (d.reserved || force))
 		{
 			error(0, 0, "File '%s' already exists in image (use -f)", bname);
 			fclose(infile_fd);
@@ -114,5 +116,6 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 	}
 
 	fclose (infile_fd);
+	VERBOSE("OK\n")
 	return true;
 }

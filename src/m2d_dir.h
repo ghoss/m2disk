@@ -13,7 +13,7 @@
 #define _M2D_DIR_H   1
 
 #include "m2d_medos.h"
-
+#include "m2d_time.h"
 
 // Consolidated directory entry
 typedef struct {
@@ -22,8 +22,8 @@ typedef struct {
 	uint16_t reserved;					// Reserved file flag
 	uint16_t protected;					// Protected file flag
 	uint32_t len;						// Length in bytes
-	uint32_t ctime;						// Creation time
-	uint32_t mtime;						// Modification time
+	struct tm_minute_t ctime;			// Creation time
+	struct tm_minute_t mtime;			// Modification time
 	uint16_t page_tab[M2D_PAGETAB_LEN];	// Pages used by file
 } dir_entry_t;
 

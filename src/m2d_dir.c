@@ -73,8 +73,9 @@ void m2d_traverse(FILE *f, char *filearg, bool (*callproc)(dir_entry_t *))
 				d.len = bswap_16(fa->len.sectors) * DK_SECTOR_SZ 
 					+ bswap_16(fa->len.bytes);
 
-				d.mtime = bswap_16(fa->mtime.day);
-				d.ctime = fa->ctime.day;
+				memcpy(&d.mtime, &fa->mtime, sizeof(struct tm_minute_t));
+				memcpy(&d.ctime, &fa->ctime, sizeof(struct tm_minute_t));
+
 				d.protected = bswap_16(fa->prot_flag);
 
 				// Callback procedure
@@ -127,8 +128,8 @@ bool m2d_lookup_file(FILE *f, char *fn, dir_entry_t *d)
 		
 		if (first_free != -1)
 			d->filenum = first_free;
-		else if (curr_idx < DK_NUM_FILES - 1)
-			d->filenum = curr_idx;
+		else if (curr_idx < DK_NUM_FILES - 2)
+			d->filenum = curr_idx + 1;
 		else
 			error(1, 0, "Directory full");
 	}

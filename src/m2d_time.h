@@ -25,5 +25,6 @@ struct tm_minute_t {
 // Function declarations
 //
 void m2d_system_time(struct tm_minute_t *tm);
+void m2d_print_time(struct tm_minute_t *tm);
 
 #endif

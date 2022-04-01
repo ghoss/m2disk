@@ -18,14 +18,17 @@
 bool print_dir(dir_entry_t *d)
 {
 	printf(
-		"%c%c %-26.26s%4d%9d%12d\n",
+		"%c%c %-26.26s%4d%9d  ",
 		(d->reserved != 0) ? '*' : ' ',
 		(d->protected != 0) ? 'R' : ' ',
 		d->name,
 		d->filenum,
-		d->len,
-		d->mtime
+		d->len
 	);
+	
+	m2d_print_time(&(d->mtime));
+
+	printf("\n");
 	return true;
 };
 
