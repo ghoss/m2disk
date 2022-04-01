@@ -30,6 +30,7 @@ void m2d_usage()
         "\totherwise, list files matching regex in file_arg\n\n"
 		"-c\tCreate and format new (empty) image file as img_file\n"
 		"-i\tImport specified files into img_file\n"
+		"-p\tList page tables of files matching file_arg\n"
         "-x\tExtract files matching file_arg from img_file\n"
         "-d\tExtract into destination 'dest_dir' (must already exist)\n\n"
         "-f\tForce mode (overwrites existing files and images)\n"

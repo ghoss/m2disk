@@ -52,10 +52,10 @@ void m2d_traverse(FILE *f, char *filearg, bool (*callproc)(dir_entry_t *))
 					continue;
 
 				// Load associated file descriptor from disk
-				d.filenum = bswap_16(ndp->file_num);
+				d.filenum = (i * DK_NUM_ND_SECT) + j;
 
 				struct disk_sector_t s1;
-				if (! m2d_read_sector(f, &s1, DK_DIR_START + (i * 8 + j)))
+				if (! m2d_read_sector(f, &s1, DK_DIR_START + d.filenum))
 					break;
 
 				// Copy page table

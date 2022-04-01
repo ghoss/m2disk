@@ -15,23 +15,27 @@
 
 
 // Static page map data table
-uint8_t page_map[DK_NUM_SECTORS / 8];
+#define PAGE_MAP_SZ		(DK_NUM_PAGES / 8)
+uint8_t page_map[PAGE_MAP_SZ];
 
 
 // m2d_set_page()
 // Marks the specified page number as "used" (TRUE) or free (FALSE)
 //
-void m2d_set_page(uint16_t n, bool used)
+uint8_t m2d_set_page(uint16_t n, bool used)
 {
-	if (n >= DK_NUM_SECTORS)
-		error(1, 0, "Illegal sector number %d in page map\n", n);
+	if (n >= DK_NUM_PAGES)
+		error(1, 0, "Illegal page number %d in page map\n", n);
 
-	uint16_t mask = (1 << (n % 8));
+	uint8_t mask = (1 << (n % 8));
+	uint8_t old = page_map[n >> 3] & mask;
 
 	if (used)
 		page_map[n >> 3] |= mask;
 	else
 		page_map[n >> 3] &= ~mask;
+
+	return old;
 }
 
 
@@ -40,21 +44,12 @@ void m2d_set_page(uint16_t n, bool used)
 //
 uint16_t m2d_find_free_page()
 {
-	for (uint16_t i = 0; i < DK_NUM_SECTORS / 8; i ++)
+	for (uint16_t i = DK_PAGE_START; i < DK_NUM_PAGES; i ++)
 	{
-		uint8_t p = page_map[i];
-		uint16_t pn = 0;
-		while ((pn < 8) && (p != 0) && (p & 1))
-		{
-			pn ++;
-			p >>= 1;
-		}
-		if (pn < 8)
-		{
-			pn += (i << 3);
-			m2d_set_page(pn, true);
-			return pn;
-		}
+		uint8_t p = m2d_set_page(i, true);
+
+		if (p == 0)
+			return i;
 	}
 	error(1, 0, "Disk image full");
 	return 0;
@@ -68,7 +63,11 @@ void m2d_free_pages(uint16_t *pt)
 {
 	for (uint16_t i = 0; i < M2D_PAGETAB_LEN; i ++)
 	{
-		m2d_set_page(bswap_16(*pt / 13), false);
+		uint16_t pg = bswap_16(*pt);
+
+		if (pg != DK_NIL_PAGE)
+			m2d_set_page(pg / 13, false);
+			
 		*pt = bswap_16(DK_NIL_PAGE);
 		pt ++;
 	}

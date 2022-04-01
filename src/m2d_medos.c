@@ -175,10 +175,11 @@ bool init_name_dir(FILE *f)
 	// Make template for an empty name directory sector
 	for (uint16_t i = 0; i < DK_NUM_ND_SECT; i ++)
 	{
-		struct name_desc_t *ndp = &s.type.nd[i];
+		struct name_desc_t *ndp = &(s.type.nd[i]);
 
 		memset(ndp->en, ' ', M2D_EXTNAME_LEN);
 		ndp->nd_kind = NDK_FREE;
+		ndp->file_num = 0;
 		ndp->version = 0;
 		ndp->fres = 0;
 	}
@@ -186,12 +187,6 @@ bool init_name_dir(FILE *f)
 	// Write empty name directory to disk
 	for (uint16_t i = 0; i < DK_NAMEDIR_LEN; i ++)
 	{
-		for (uint16_t j = 0; j < DK_NUM_ND_SECT; j ++)
-		{
-			uint16_t sn = i * DK_NUM_ND_SECT + j;
-			s.type.nd[j].file_num = bswap_16(sn);
-		}
-
 		if (! m2d_write_sector(f, &s, DK_NAME_START + i))
 			return false;
 	}
@@ -216,7 +211,8 @@ bool make_filedir_entry(
 
 	struct file_desc_t *fdp = &s.type.fd;
 	fdp->fd_kind = bswap_16(FDK_FATHER);
-	fdp->version ++;
+	fdp->file_num = bswap_16(fnum);
+	fdp->version = UINT16_MAX;
 	
 	// Set file size
 	struct fd_father_t *fa = &fdp->fdk.father;
@@ -224,7 +220,9 @@ bool make_filedir_entry(
 	fa->len.bytes = bswap_16(sz % DK_SECTOR_SZ);
 
 	// Set file flags
-	fa->ref_flag = fa->prot_flag = fdp->reserved 
+	fa->ref_flag = bswap_16(1);
+	fa->mod_flag = 0;
+	fa->prot_flag = fdp->reserved 
 		= bswap_16(reserved ? 1 : 0);
 
 	// Set file creation and modification times
@@ -276,7 +274,8 @@ bool make_namedir_entry(FILE *f, char *fname, uint16_t fnum)
 
 	convert_filename(&(ndp->en[0]), fname);
 	ndp->nd_kind = bswap_16(NDK_FNAME);
-	ndp->version = bswap_16(DK_NIL_PAGE);
+	ndp->file_num = bswap_16(fnum);
+	ndp->version = UINT16_MAX;
 
 	// Write name directory entry to disk
 	if (! m2d_write_sector(f, &s, nsn))

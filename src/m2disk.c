@@ -25,6 +25,7 @@ typedef enum {
 	M_EXTRACT,
 	M_IMPORT,
 	M_FORMAT,
+	M_PAGETAB,
 	M_UNKNOWN
 } mode_type;
 
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
 
 	// Parse command line options
 	opterr = 0;
-	while ((c = getopt (argc, argv, "Vvlxhftd:ic")) != -1)
+	while ((c = getopt (argc, argv, "Vvlxhpftd:ic")) != -1)
 	{
 		switch (c)
 		{
@@ -60,6 +61,11 @@ int main(int argc, char **argv)
 			
 			case 'i' :
 				mode = M_IMPORT;
+				break;
+
+			case 'p' :
+				mode = M_PAGETAB;
+				break;
 
 			case 'd' :
 				outdir = optarg;
@@ -105,7 +111,11 @@ int main(int argc, char **argv)
 		if (mode == M_FORMAT)
 		{
 			// In format mode, overwrite existing files only if forced
-			if ((imgfile_fd == NULL) || force)
+			if (imgfile_fd == NULL)
+			{
+				imgfile_fd = fopen(imgfile, "w+");
+			} 
+			else if (force)
 			{
 				imgfile_fd = freopen(imgfile, "w+", imgfile_fd);
 			}
@@ -130,12 +140,18 @@ int main(int argc, char **argv)
 	}
 
 	// Check for optional file_arg argument
-	if ((mode == M_EXTRACT) || (mode == M_LISTDIR))
+	switch (mode)
 	{
-		if (optind + 1 < argc)
-			filearg = argv[optind + 1];
-
-		VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
+		case M_EXTRACT :
+		case M_LISTDIR :
+		case M_PAGETAB :
+			if (optind + 1 < argc)
+				filearg = argv[optind + 1];
+			VERBOSE("> File argument: '%s'\n", filearg ? filearg : "*")
+			break;
+		
+		default :
+			break;
 	}
 
 	if (force)
@@ -145,7 +161,7 @@ int main(int argc, char **argv)
 	switch (mode)
 	{
 		case M_LISTDIR :
-			m2d_listdir(imgfile_fd, filearg);
+			m2d_list_dir(imgfile_fd, filearg);
 			VERBOSE("\n")
 			break;
 
@@ -196,6 +212,11 @@ int main(int argc, char **argv)
 			{
 				error(0, errno, "Can't create image file");
 			}
+			break;
+
+		case M_PAGETAB :
+			// Print page table of specified file(s)
+			m2d_list_pagetab(imgfile_fd, filearg);
 			break;
 
 		default :

@@ -52,7 +52,7 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 		// File found; file number in d.filenum
 		if (! (d.reserved || force))
 		{
-			error(0, 0, "File '%s' already exists in image (use -f)", bname);
+			error(0, 0, "File '%s' already exists (use -f)", bname);
 			fclose(infile_fd);
 			return false;
 		}
@@ -76,9 +76,9 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 		if ((sect % 8) == 0)
 		{
 			sect = 0;
-			if (d.reserved == bswap_16(1))
+			if (d.reserved)
 			{
-				start = (bswap_16(d.page_tab[page_n ++] / 13)) * 8;
+				start = (bswap_16(d.page_tab[page_n ++]) / 13) * 8;
 			}
 			else if (page_n < M2D_PAGETAB_LEN)
 			{

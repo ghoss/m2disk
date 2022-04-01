@@ -17,6 +17,7 @@
 
 // Forward declarations
 //
-void m2d_listdir(FILE *f, char *filearg);
+void m2d_list_dir(FILE *f, char *filearg);
+void m2d_list_pagetab(FILE *f, char *filearg);
 
 #endif

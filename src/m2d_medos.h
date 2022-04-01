@@ -65,9 +65,6 @@ struct file_desc_t {
 // Name descriptor
 #define NDK_FREE	0
 #define NDK_FNAME	1
-#define tt 043200
-#define tt1 044600
-#define tt2 0140
 
 struct name_desc_t {
 	char en[M2D_EXTNAME_LEN];
@@ -80,6 +77,7 @@ struct name_desc_t {
 // Disk dimensions
 #define DK_NUM_SECTORS	37632	// Total number of sectors on disk
 #define DK_SECTOR_SZ	256		// Size of a sector in bytes
+#define DK_NUM_PAGES	(DK_NUM_SECTORS / 8)
 #define DK_NUM_FILES	768		// Max. number of files on disk
 #define DK_NUM_ND_SECT	(DK_SECTOR_SZ / sizeof(struct name_desc_t))
 #define DK_NIL_PAGE		61152	// Value of the NIL page pointer
@@ -97,6 +95,7 @@ struct disk_sector_t {
 #define DK_DIR_START	18048	// 1st file directory sector
 #define DK_NAME_START	18816	// 1st name directory sector
 #define DK_NAMEDIR_LEN	(DK_NUM_FILES / DK_NUM_ND_SECT)
+#define DK_PAGE_START	2364	// First available free page
 
 
 // Function declarations
