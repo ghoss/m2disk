@@ -206,7 +206,7 @@ bool init_name_dir(FILE *f)
 bool make_filedir_entry(
 	FILE *f,
 	uint16_t fnum, uint32_t sz, 
-	uint16_t pt[], bool reserved
+	uint16_t *pt, bool reserved
 ) {
 	struct disk_sector_t s;
 
@@ -293,7 +293,7 @@ bool make_namedir_entry(FILE *f, char *fname, uint16_t fnum)
 bool m2d_register_file(
 	FILE *f, char *fname,
 	uint16_t fnum, uint32_t sz, 
-	uint16_t pt[], bool reserved
+	uint16_t *pt, bool reserved
 ) {
 	return make_filedir_entry(f, fnum, sz, pt, reserved)
 		&& make_namedir_entry(f, fname, fnum);
@@ -310,12 +310,15 @@ bool init_reserved_files(FILE *f)
 	{
 		uint16_t pt[M2D_PAGETAB_LEN];
 
-		uint16_t pages = reserved_file[i].sectors >> 3;
-		uint16_t start = reserved_file[i].start;
+		uint16_t pages = (reserved_file[i].sectors + 7) / 8;
+		uint16_t start = reserved_file[i].start / 8;
 
 		// Fill continuous page table
 		for (uint16_t j = 0; j < M2D_PAGETAB_LEN; j ++)
-			pt[j] = (j < pages) ? bswap_16((start + j) * 13) : DK_NIL_PAGE;
+		{
+			pt[j] = bswap_16((j < pages) ?
+				((start + j) * 13) : DK_NIL_PAGE);
+		}
 
 		bool res = m2d_register_file(
 			f, reserved_file[i].en,

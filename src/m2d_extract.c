@@ -42,7 +42,7 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 
 		// Loop through each page entry (1 page = 8 sectors)
 		while ((len > 0) && (i < M2D_PAGETAB_LEN)
-			&& ((page != DK_NIL_PAGE)))
+			&& ((page != bswap_16(DK_NIL_PAGE))))
 		{
 			// Determine number of used sectors
 			uint16_t max_sec = ((len > 8 * DK_SECTOR_SZ) 

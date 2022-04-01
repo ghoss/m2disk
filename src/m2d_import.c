@@ -106,7 +106,7 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 
 	// Fill rest of page table
 	for (uint16_t j = page_n; j < M2D_PAGETAB_LEN; j ++)
-		d.page_tab[j] = DK_NIL_PAGE;
+		d.page_tab[j] = bswap_16(DK_NIL_PAGE);
 
 	// Register file in directory
 	if (! m2d_register_file(

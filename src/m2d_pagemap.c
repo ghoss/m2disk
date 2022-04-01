@@ -69,7 +69,7 @@ void m2d_free_pages(uint16_t *pt)
 	for (uint16_t i = 0; i < M2D_PAGETAB_LEN; i ++)
 	{
 		m2d_set_page(bswap_16(*pt / 13), false);
-		*pt = DK_NIL_PAGE;
+		*pt = bswap_16(DK_NIL_PAGE);
 		pt ++;
 	}
 }
