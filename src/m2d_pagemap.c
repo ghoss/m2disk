@@ -88,20 +88,23 @@ void m2d_load_pagemap(FILE *f)
 		if (! m2d_read_sector(f, &s, DK_DIR_START + i))
 			error(1, 0, "Can't build pagemap from image");
 
-		// Check for internal data mismatch
 		fdp = &(s.type.fd);
-		if (bswap_16(fdp->file_num) != i)
-			error(1, 0, "File number mismatch in image directory");
-
-		// Add all used pages of this file to the page map
-		for (uint16_t j = 0; j < M2D_PAGETAB_LEN; j ++)
+		if (fdp->fd_kind != bswap_16(FDK_NOFILE))
 		{
-			uint16_t p = bswap_16(fdp->page_tab[j]);
+			// Check for internal data mismatch
+			if (bswap_16(fdp->file_num) != i)
+				error(1, 0, "File number mismatch in image directory");
 
-			if (p != DK_NIL_PAGE)
-				m2d_set_page(p / 13, true);
-			else
-				break;
+			// Add all used pages of this file to the page map
+			for (uint16_t j = 0; j < M2D_PAGETAB_LEN; j ++)
+			{
+				uint16_t p = bswap_16(fdp->page_tab[j]);
+
+				if (p != DK_NIL_PAGE)
+					m2d_set_page(p / 13, true);
+				else
+					break;
+			}
 		}
 	}
 }

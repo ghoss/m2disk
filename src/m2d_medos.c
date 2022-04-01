@@ -144,7 +144,7 @@ bool init_file_dir(FILE *f)
 	struct file_desc_t *fdp = &s.type.fd;
 	fdp->reserved = 0;
 	fdp->version = UINT16_MAX;
-	fdp->fd_kind = FDK_NOFILE;
+	fdp->fd_kind = bswap_16(FDK_NOFILE);
 
 	// Initialize filler area
 	bzero(fdp->fdk.filler, M2D_MAX_FILLER + 1);
