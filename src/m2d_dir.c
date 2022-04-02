@@ -70,13 +70,12 @@ void m2d_traverse(FILE *f, char *filearg, bool (*callproc)(dir_entry_t *))
 					);
 
 				struct fd_father_t *fa = &s1.type.fd.fdk.father;
+				d.protected = bswap_16(fa->prot_flag);
 				d.len = bswap_16(fa->len.sectors) * DK_SECTOR_SZ 
 					+ bswap_16(fa->len.bytes);
 
 				memcpy(&d.mtime, &fa->mtime, sizeof(struct tm_minute_t));
 				memcpy(&d.ctime, &fa->ctime, sizeof(struct tm_minute_t));
-
-				d.protected = bswap_16(fa->prot_flag);
 
 				// Callback procedure
 				callproc(&d);
@@ -124,7 +123,7 @@ bool m2d_lookup_file(FILE *f, char *fn, dir_entry_t *d)
 	// If not found, report first free directory entry
 	if (! found)
 	{
-		d->reserved = bswap_16(0);
+		d->reserved = d->protected = bswap_16(0);
 		
 		if (first_free != -1)
 			d->filenum = first_free;

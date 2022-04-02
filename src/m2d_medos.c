@@ -21,19 +21,20 @@ struct reserved_file_t {
 	char *en;			// File name
 	uint16_t start;		// 1st sector number
 	uint16_t sectors;	// Number of sectors in file
+	bool readonly;		// "Protected" flag
 };
 
 const struct reserved_file_t reserved_file[DK_NUM_RESFILES] = 
 {
-	{ "FS.FileDirectory",		DK_DIR_START,	DK_NUM_FILES },
-	{ "FS.FileDirectory.Back",	36768,			DK_NUM_FILES },
-	{ "FS.NameDirectory",		DK_NAME_START, 	DK_NAMEDIR_LEN },
-	{ "FS.NameDirectory.Back",	37536,			DK_NAMEDIR_LEN },
-	{ "FS.BadPages",			0,				0 },
-	{ "PC.BootFile",			0,				192 },
-	{ "PC.BootFile.Back",		1248,			192 },
-	{ "PC.DumpFile",			192,			512 },
-	{ "PC.Dump1File",			704,			512 }
+	{ "FS.FileDirectory",		DK_DIR_START,	DK_NUM_FILES,	false },
+	{ "FS.FileDirectory.Back",	36768,			DK_NUM_FILES,	false },
+	{ "FS.NameDirectory",		DK_NAME_START, 	DK_NAMEDIR_LEN,	false },
+	{ "FS.NameDirectory.Back",	37536,			DK_NAMEDIR_LEN,	false },
+	{ "FS.BadPages",			0,				0,				false },
+	{ "PC.BootFile",			0,				192,			true },
+	{ "PC.BootFile.Back",		1248,			192,			true },
+	{ "PC.DumpFile",			192,			512,			true },
+	{ "PC.Dump1File",			704,			512 ,			true }
 };
 
 
@@ -178,7 +179,7 @@ bool init_name_dir(FILE *f)
 		struct name_desc_t *ndp = &(s.type.nd[i]);
 
 		memset(ndp->en, ' ', M2D_EXTNAME_LEN);
-		ndp->nd_kind = NDK_FREE;
+		ndp->nd_kind = bswap_16(NDK_FREE);
 		ndp->file_num = 0;
 		ndp->version = 0;
 		ndp->fres = 0;
@@ -201,7 +202,7 @@ bool init_name_dir(FILE *f)
 bool make_filedir_entry(
 	FILE *f,
 	uint16_t fnum, uint32_t sz, 
-	uint16_t *pt, bool reserved
+	uint16_t *pt, bool readonly, bool reserved
 ) {
 	struct disk_sector_t s;
 
@@ -221,9 +222,9 @@ bool make_filedir_entry(
 
 	// Set file flags
 	fa->ref_flag = bswap_16(1);
-	fa->mod_flag = 0;
-	fa->prot_flag = fdp->reserved 
-		= bswap_16(reserved ? 1 : 0);
+	fa->mod_flag = bswap_16(0);
+	fa->prot_flag = bswap_16(readonly ? 1 : 0);
+	fdp->reserved = bswap_16(reserved ? 1 : 0);
 
 	// Set file creation and modification times
 	m2d_system_time(&fa->ctime);
@@ -292,9 +293,9 @@ bool make_namedir_entry(FILE *f, char *fname, uint16_t fnum)
 bool m2d_register_file(
 	FILE *f, char *fname,
 	uint16_t fnum, uint32_t sz, 
-	uint16_t *pt, bool reserved
+	uint16_t *pt, bool readonly, bool reserved
 ) {
-	return make_filedir_entry(f, fnum, sz, pt, reserved)
+	return make_filedir_entry(f, fnum, sz, pt, readonly, reserved)
 		&& make_namedir_entry(f, fname, fnum);
 }
 
@@ -308,9 +309,9 @@ bool init_reserved_files(FILE *f)
 	for (uint16_t i = 0; i < DK_NUM_RESFILES; i ++)
 	{
 		uint16_t pt[M2D_PAGETAB_LEN];
-
-		uint16_t pages = (reserved_file[i].sectors + 7) / 8;
-		uint16_t start = reserved_file[i].start / 8;
+		const struct reserved_file_t *fp = &(reserved_file[i]);
+		uint16_t pages = (fp->sectors + 7) / 8;
+		uint16_t start = fp->start / 8;
 
 		// Fill continuous page table
 		for (uint16_t j = 0; j < M2D_PAGETAB_LEN; j ++)
@@ -320,9 +321,8 @@ bool init_reserved_files(FILE *f)
 		}
 
 		bool res = m2d_register_file(
-			f, reserved_file[i].en,
-			i, reserved_file[i].sectors * DK_SECTOR_SZ, 
-			pt, true);
+			f, fp->en, i, fp->sectors * DK_SECTOR_SZ, 
+			pt, fp->readonly, true);
 			
 		if (! res) 
 			return false;

@@ -110,7 +110,7 @@ bool m2d_import(FILE *f, char *infile, bool force, bool convert)
 
 	// Register file in directory
 	if (! m2d_register_file(
-		f, bname, d.filenum, total, d.page_tab, d.reserved
+		f, bname, d.filenum, total, d.page_tab, d.protected, d.reserved
 	)) {
 		error(0, 0, "Can't create directory entry");
 	}

@@ -95,7 +95,7 @@ struct disk_sector_t {
 #define DK_DIR_START	18048	// 1st file directory sector
 #define DK_NAME_START	18816	// 1st name directory sector
 #define DK_NAMEDIR_LEN	(DK_NUM_FILES / DK_NUM_ND_SECT)
-#define DK_PAGE_START	2364	// First available free page
+#define DK_PAGE_START	0		// First available free page
 
 
 // Function declarations
@@ -107,7 +107,7 @@ bool m2d_read_sector(FILE *f, struct disk_sector_t *s, uint16_t n);
 bool m2d_register_file(
 	FILE *f, char *fname,
 	uint16_t fnum, uint32_t sz, 
-	uint16_t pt[], bool reserved
+	uint16_t *pt, bool readonly, bool reserved
 );
 
 #endif

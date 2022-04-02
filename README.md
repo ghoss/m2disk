@@ -21,6 +21,7 @@ USAGE: m2disk [-Vvlxhfic] [-d dest_dir] img_file [file_arg|files]
 
 -c	Create and format new (empty) image file as img_file
 -i	Import specified files into img_file
+-p	List page tables of files matching file_arg
 -x	Extract files matching file_arg from img_file
 -d	Extract into destination 'dest_dir' (must already exist)
 
@@ -66,3 +67,7 @@ original Lilith Modula-2 machine.
 * ```m2disk -ift test.img InOut.MOD```
 
   Same as above, but perform text conversion and overwrite existing files with the same name(s) in the image. 
+
+* ```m2disk -p test.img PC.BootFile```
+
+  Displays the list of disk pages occupied by the file ```PC.BootFile``` in the image ```test.img```.
