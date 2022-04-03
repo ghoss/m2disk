@@ -25,6 +25,13 @@ void m2d_extract(FILE *f, char *filearg, bool force, bool convert)
 		uint32_t len = d->len;
 		uint16_t i = 0;
 
+		// Don't export reserved files unless explicitly requested
+		if ((d->reserved) && ((filearg == NULL) || (! force)))
+		{
+			VERBOSE("ignored (reserved file, use -f)\n")
+			return true;
+		}
+
 		// Page entry / 13 = actual page address
 		// (see SEK Medos-2 filesystem thesis p.74)
 		uint16_t page = (bswap_16(d->page_tab[i]) / 13) * 8;
