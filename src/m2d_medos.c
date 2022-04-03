@@ -43,6 +43,7 @@ const struct reserved_file_t reserved_file[DK_NUM_RESFILES] =
 //
 #define M2_EOL	'\036'
 #define UX_EOL	'\n'
+#define UX_TAB	'\t'
 
 void m2d_text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix)
 {
@@ -50,13 +51,22 @@ void m2d_text_convert(struct disk_sector_t *s, uint16_t n, bool to_unix)
 
 	for (uint16_t i = 0; i < n; i ++, p ++)
 	{
-		if (*p == M2_EOL)
+		switch (*p)
 		{
-			if (to_unix) *p = UX_EOL;
-		}
-		else if (*p == UX_EOL)
-		{
-			if (! to_unix) *p = M2_EOL;
+			case M2_EOL :
+				if (to_unix) *p = UX_EOL;
+				break;
+
+			case UX_EOL :
+				if (! to_unix) *p = M2_EOL;
+				break;
+			
+			case UX_TAB :
+				if (! to_unix) *p = ' ';
+				break;
+
+			default :
+				break;
 		}
 	}
 }
